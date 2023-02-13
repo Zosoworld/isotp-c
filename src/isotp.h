@@ -1,18 +1,22 @@
 #ifndef __ISOTP_H__
 #define __ISOTP_H__
 
+#include <cstdint>
 #include <stdio.h>
 #include <string.h>
 
-#ifdef __cplusplus
+#include <functional>
 #include <stdint.h>
 
 extern "C" {
-#endif
 
 #include "isotp_config.h"
 #include "isotp_defines.h"
 
+typedef std::function<uint32_t(void)> isotp_user_get_ms_callback;
+typedef std::function<int(const uint32_t, const uint8_t *, const uint8_t)>
+    isotp_user_send_can_callback;
+typedef std::function<void(const char *)> isotp_user_debug_callback;
 /**
  * @brief Struct containing the data for linking an application to a CAN
  * instance. The data stored in this struct is used internally and may be used
@@ -56,12 +60,11 @@ typedef struct IsoTpLink {
   uint8_t receive_status;
 
   /* user implemented callback functions */
-  uint32_t (*isotp_user_get_ms)(void); /* get millisecond */
-  int (*isotp_user_send_can)(
-      const uint32_t arbitration_id, const uint8_t *data,
-      const uint8_t size); /* send can message. should return ISOTP_RET_OK when
-                              success.  */
-  void (*isotp_user_debug)(const char *message, ...); /* print debug message */
+  isotp_user_get_ms_callback m_getms;     /* get millisecond */
+  isotp_user_send_can_callback m_sendcan; /* send can message. should return
+                                             ISOTP_RET_OK when success. */
+  isotp_user_debug_callback m_debug;
+
 } IsoTpLink;
 
 /**
@@ -83,11 +86,9 @@ typedef struct IsoTpLink {
  */
 void isotp_init_link(IsoTpLink *link, uint32_t sendid, uint8_t *sendbuf,
                      uint16_t sendbufsize, uint8_t *recvbuf,
-                     uint16_t recvbufsize, uint32_t (*isotp_user_get_ms)(void),
-                     int (*isotp_user_send_can)(const uint32_t arbitration_id,
-                                                const uint8_t *data,
-                                                const uint8_t size),
-                     void (*isotp_user_debug)(const char *message, ...));
+                     uint16_t recvbufsize, isotp_user_get_ms_callback getms,
+                     isotp_user_send_can_callback sendcan,
+                     isotp_user_debug_callback debug);
 
 /**
  * @brief Polling function; call this function periodically to handle timeouts,
@@ -150,9 +151,6 @@ int isotp_send_with_id(IsoTpLink *link, uint32_t id, const uint8_t payload[],
  */
 int isotp_receive(IsoTpLink *link, uint8_t *payload,
                   const uint16_t payload_size, uint16_t *out_size);
-
-#ifdef __cplusplus
 }
-#endif
 
 #endif // __ISOTP_H__
