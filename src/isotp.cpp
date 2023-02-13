@@ -478,11 +478,11 @@ int isotp_receive(IsoTpLink *link, uint8_t *payload,
 
 void isotp_init_link(IsoTpLink *link, uint32_t sendid, uint8_t *sendbuf,
                      uint16_t sendbufsize, uint8_t *recvbuf,
-                     uint16_t recvbufsize, uint32_t (*isotp_user_get_ms)(void),
-                     isotp_user_get_ms_callback getms,
+                     uint16_t recvbufsize, isotp_user_get_ms_callback getms,
                      isotp_user_send_can_callback sendcan,
                      isotp_user_debug_callback debug) {
-  memset(link, 0, sizeof(*link));
+  //   memset(link, 0, sizeof(*link));
+  *link = {};
   link->receive_status = ISOTP_RECEIVE_STATUS_IDLE;
   link->send_status = ISOTP_SEND_STATUS_IDLE;
   link->send_arbitration_id = sendid;
